@@ -48,13 +48,16 @@ public class Initialize implements IXposedHookLoadPackage {
             return;
         }
 
-        XposedHelpers.findAndHookMethod(aClass, "startActivity", Intent.class, new XC_MethodHook() {
+        XposedHelpers.findAndHookMethod(aClass, "startActivityForResult", Intent.class, new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) {
                 Intent arg = (Intent) param.args[0];
-                if (arg.getDataString() != null && arg.getDataString().matches("market://.+")) {
-                    param.args[0] = null;
-                    param.setResult(null);
+                if (arg.getDataString() != null) {
+                    String dataString = arg.getDataString();
+                    if(dataString.matches("market://.+") || dataString.matches(".+play.google.com/store.+")) {
+                        param.args[0] = null;
+                        param.setResult(null);
+                    }
                 }
             }
         });
