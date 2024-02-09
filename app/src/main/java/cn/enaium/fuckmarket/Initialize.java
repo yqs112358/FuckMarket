@@ -22,8 +22,11 @@
 package cn.enaium.fuckmarket;
 
 import android.content.Intent;
+import android.util.Log;
+
 import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.XC_MethodHook;
+import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.XposedHelpers;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
@@ -54,9 +57,11 @@ public class Initialize implements IXposedHookLoadPackage {
                 Intent arg = (Intent) param.args[0];
                 if (arg.getDataString() != null) {
                     String dataString = arg.getDataString();
-                    if(dataString.matches("market://.+") || dataString.matches(".+play.google.com/store.+")) {
+                    if (dataString.startsWith("market://") || dataString.contains("play.google.com/store")        // ban market
+                            || dataString.startsWith("http://") || dataString.startsWith("https://")) {           // ban browser
                         param.args[0] = null;
                         param.setResult(null);
+                        Log.i("FuckMarketAndBrowser", "startActivity blocked: " + dataString);
                     }
                 }
             }
