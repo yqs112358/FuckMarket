@@ -37,6 +37,18 @@ public class Initialize implements IXposedHookLoadPackage {
 
     private boolean init = false;
 
+    // return true to block
+    private boolean isIntentToBlock(Intent arg){
+        if (arg.getDataString() != null) {
+            String dataString = arg.getDataString();
+            if (dataString.startsWith("market://") || dataString.contains("play.google.com/store")        // ban market
+                    || dataString.startsWith("http://") || dataString.startsWith("https://")) {           // ban browser
+                return true;
+            }
+        }
+        return false;
+    }
+
     @Override
     public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) {
         if (init) {
@@ -51,18 +63,26 @@ public class Initialize implements IXposedHookLoadPackage {
             return;
         }
 
+        XposedHelpers.findAndHookMethod(aClass, "startActivity", Intent.class, new XC_MethodHook() {
+            @Override
+            protected void beforeHookedMethod(MethodHookParam param) {
+                Intent arg = (Intent) param.args[0];
+                if (isIntentToBlock(arg)) {
+                    Log.i("FuckMarketAndBrowser", "startActivity blocked: " + arg.getDataString());
+                    param.args[0] = null;
+                    param.setResult(null);
+                }
+            }
+        });
+
         XposedHelpers.findAndHookMethod(aClass, "startActivityForResult", Intent.class, new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) {
                 Intent arg = (Intent) param.args[0];
-                if (arg.getDataString() != null) {
-                    String dataString = arg.getDataString();
-                    if (dataString.startsWith("market://") || dataString.contains("play.google.com/store")        // ban market
-                            || dataString.startsWith("http://") || dataString.startsWith("https://")) {           // ban browser
-                        param.args[0] = null;
-                        param.setResult(null);
-                        Log.i("FuckMarketAndBrowser", "startActivity blocked: " + dataString);
-                    }
+                if (isIntentToBlock(arg)) {
+                    Log.i("FuckMarketAndBrowser", "startActivityForResult blocked: " + arg.getDataString());
+                    param.args[0] = null;
+                    param.setResult(null);
                 }
             }
         });

@@ -1,3 +1,8 @@
-# FuckMarket
+# Fuck Market and Browser
 
-Select market app and target app
+> Block any call to Google Play Market and System Browser
+
+## Usage
+
+1. Install
+2. Select target app in Xposed framework
